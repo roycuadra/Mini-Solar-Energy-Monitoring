@@ -6,7 +6,7 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mini Energy Monitoring System</title>
+  <title>Solar Energy Monitoring System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;600;700&display=swap');
@@ -17,7 +17,6 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       --card-border:rgba(255,255,255,0.07);
       --label:#555; --body-text:#e0e0e0;
       --grid:rgba(255,255,255,0.05);
-      --axis:#444;
     }
     body.light {
       --bg-a:#eef2f7; --bg-b:#e8edf5; --bg-c:#f0f4fa;
@@ -25,7 +24,6 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       --card-border:rgba(0,0,0,0.09);
       --label:#999; --body-text:#1a1a2e;
       --grid:rgba(0,0,0,0.06);
-      --axis:#bbb;
     }
 
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -108,6 +106,10 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       display:flex; align-items:center; gap:8px;
     }
     .metric-label::after{content:'';flex:1;height:1px;background:var(--grid);}
+    .metric-sub{
+      font-size:.62rem; color:var(--label); margin-top:-10px;
+      margin-bottom:14px; font-style:italic; opacity:.7;
+    }
 
     /* ── Readout ── */
     .readout{
@@ -159,7 +161,6 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
 
     /* ── Peak chart ── */
     #peakChart{width:100%;display:block;border-radius:8px;}
-
     .peak-info{
       display:flex; flex-wrap:wrap; gap:24px; margin-top:14px;
       font-size:.75rem; font-weight:600;
@@ -188,12 +189,12 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
     .btn:active{transform:translateY(0);}
     .btn-zero {background:rgba(0,229,255,.12);  color:#00e5ff; border:1px solid rgba(0,229,255,.3);}
     .btn-time {background:rgba(105,240,174,.12); color:#69f0ae; border:1px solid rgba(105,240,174,.3);}
-    .btn-reset{background:rgba(255,82,82,.12);   color:#ff5252; border:1px solid rgba(255,82,82,.3);}
+    .btn-erg  {background:rgba(255,82,82,.12);   color:#ff5252; border:1px solid rgba(255,82,82,.3);}
     .btn-prst {background:rgba(255,171,64,.12);  color:#ffab40; border:1px solid rgba(255,171,64,.3);}
     .btn-theme{background:rgba(179,136,255,.12); color:#b388ff; border:1px solid rgba(179,136,255,.3);}
     body.light .btn-zero {color:#0077b6;border-color:#0077b6;background:rgba(0,119,182,.08);}
     body.light .btn-time {color:#00897b;border-color:#00897b;background:rgba(0,137,123,.08);}
-    body.light .btn-reset{color:#c0392b;border-color:#c0392b;background:rgba(192,57,43,.08);}
+    body.light .btn-erg  {color:#c0392b;border-color:#c0392b;background:rgba(192,57,43,.08);}
     body.light .btn-prst {color:#e65100;border-color:#e65100;background:rgba(230,81,0,.08);}
     body.light .btn-theme{color:#7b1fa2;border-color:#7b1fa2;background:rgba(123,31,162,.08);}
     .ctrl-msg{font-size:.75rem;margin-top:10px;min-height:1.3em;font-weight:600;letter-spacing:.3px;}
@@ -216,8 +217,8 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
   </div>
 
   <div class="header">
-    <h1>Mini Energy Monitoring System</h1>
-    <div class="subtitle">Real-Time Energy Monitoring Dashboard</div>
+    <h1>Solar Energy Monitoring System</h1>
+    <div class="subtitle">Real-time monitoring dashboard</div>
     <div class="subtitle">Measurement Range: 0–36 V • 0–1.3 A</div>
   </div>
 
@@ -243,7 +244,7 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       </div>
     </div>
 
-    <!-- Power -->
+    <!-- Power (calculates down to µW) -->
     <div class="card power">
       <div class="metric-label">Power</div>
       <div class="readout" id="p">Reading…</div>
@@ -253,13 +254,13 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       </div>
     </div>
 
-    <!-- Energy -->
+    <!-- Energy — EEPROM-backed, daily auto-reset at midnight -->
     <div class="card energy">
-      <div class="metric-label">Energy Accumulated</div>
+      <div class="metric-label">Energy Today</div>
       <div class="readout" id="e">--</div>
     </div>
 
-    <!-- Date & Time -->
+    <!-- Date & Time (12-hour) -->
     <div class="card time">
       <div class="metric-label">Date &amp; Time</div>
       <div class="readout" id="t">--</div>
@@ -271,21 +272,22 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       <div class="readout" id="s">Connecting…</div>
     </div>
 
-    <!-- Trend chart (full width) -->
+    <!-- Trend chart — V / I / P only (no energy, no peak data) -->
     <div class="card trend">
-      <div class="metric-label">Trend — Last 60 Readings (~1.1 min window)</div>
+      <div class="metric-label">Live Trend — Last 60 Readings (~1.1 min)</div>
       <canvas id="trendChart"></canvas>
       <div class="chart-legend">
         <span class="leg leg-v"><span class="leg-dot"></span>Voltage</span>
         <span class="leg leg-c"><span class="leg-dot"></span>Current</span>
         <span class="leg leg-p"><span class="leg-dot"></span>Power</span>
-        <span class="chart-note">Each point = 1 reading (normalised per-series)</span>
+        <span class="chart-note">Each point = 1 reading · normalised per series</span>
       </div>
     </div>
 
-    <!-- Peak solar by hour (full width) -->
+    <!-- Peak solar by hour — daily auto-reset at midnight -->
     <div class="card peaks">
       <div class="metric-label">Peak Solar Power by Hour — Today</div>
+      <div class="metric-sub">Auto-resets at midnight · or reset manually below</div>
       <canvas id="peakChart"></canvas>
       <div class="peak-info">
         <div class="peak-stat">
@@ -304,24 +306,23 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
           <span class="peak-stat-label">Best Hour</span>
           <span class="peak-stat-value" id="pk-hour">--</span>
         </div>
-        <span class="peak-reset-note">Resets automatically at midnight</span>
       </div>
     </div>
 
-    <!-- Controls (full width) -->
+    <!-- Controls -->
     <div class="card controls">
       <div class="metric-label">Controls</div>
       <div class="controls-row">
         <button class="btn btn-zero"  onclick="zeroCal()">⊙ Zero Current</button>
         <button class="btn btn-time"  onclick="syncTime()">⏱ Sync Clock</button>
-        <button class="btn btn-reset" onclick="resetEnergy()">↺ Reset Energy</button>
+        <button class="btn btn-erg"   onclick="resetEnergy()">↺ Reset Energy</button>
         <button class="btn btn-prst"  onclick="resetPeaks()">↺ Reset Peaks</button>
         <button class="btn btn-theme" id="theme-btn" onclick="toggleTheme()">☀ Light Mode</button>
       </div>
       <div class="ctrl-msg" id="ctrl-msg"></div>
     </div>
 
-  </div><!-- /dashboard -->
+  </div>
 
   <script>
     /* ── State ──────────────────────────────────── */
@@ -340,11 +341,11 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
     }
 
     function setStability(id,curr,prevVal){
-      const bar = document.getElementById('bar-'+id);
+      const bar=document.getElementById('bar-'+id);
       if(!bar||prevVal===null){if(bar)bar.style.width='100%';return;}
-      const ref  = Math.max(Math.abs(parseFloat(prevVal)||0),0.001);
-      const diff = Math.abs((parseFloat(curr)||0)-(parseFloat(prevVal)||0));
-      const s    = clamp(1-(diff/ref)*4,0,1);
+      const ref =Math.max(Math.abs(parseFloat(prevVal)||0),0.001);
+      const diff=Math.abs((parseFloat(curr)||0)-(parseFloat(prevVal)||0));
+      const s   =clamp(1-(diff/ref)*4,0,1);
       bar.style.width=(s*100).toFixed(1)+'%';
     }
 
@@ -353,10 +354,10 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       if(!el)return;
       el.textContent=msg;
       el.style.color=ok?'#69f0ae':'#ff5252';
-      setTimeout(()=>{el.textContent='';},5000);
+      setTimeout(()=>{el.textContent='';},6000);
     }
 
-    /* ── Main data fetch ────────────────────────── */
+    /* ── Main data fetch (1100 ms — matched to sensor interval) ── */
     function update(){
       fetch('/data')
         .then(r=>{if(!r.ok)throw new Error();return r.json();})
@@ -386,7 +387,7 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
         });
     }
 
-    /* ── Trend chart ────────────────────────────── */
+    /* ── Trend chart (V / I / P only) ──────────── */
     function drawTrend(vArr,cArr,pArr){
       const canvas=document.getElementById('trendChart');
       if(!canvas||vArr.length<2)return;
@@ -402,7 +403,7 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
         const y=P.t+cH*i/4;
         ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
       }
-      function drawLine(arr,color,glow){
+      function line(arr,color,glow){
         if(arr.length<2)return;
         let mn=arr[0],mx=arr[0];
         arr.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;});
@@ -417,28 +418,26 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
         });
         ctx.stroke(); ctx.shadowBlur=0;
       }
-      drawLine(vArr,'#00e5ff','rgba(0,229,255,0.6)');
-      drawLine(cArr,'#ffea00','rgba(255,234,0,0.6)');
-      drawLine(pArr,'#ff5252','rgba(255,82,82,0.6)');
+      line(vArr,'#00e5ff','rgba(0,229,255,.6)');
+      line(cArr,'#ffea00','rgba(255,234,0,.6)');
+      line(pArr,'#ff5252','rgba(255,82,82,.6)');
     }
 
-    /* ── Peak bar chart (24-hour) ───────────────── */
-    function drawPeaks(peakPower, currentHour){
+    /* ── Peak bar chart (24 hours, 12h labels) ── */
+    function drawPeaks(peakPower,currentHour){
       const canvas=document.getElementById('peakChart');
       if(!canvas)return;
       const W=canvas.offsetWidth||700;
-      const BAR_W=Math.max(8, Math.floor((W-48)/24));
-      const H=Math.max(140, BAR_W*4);
+      const BAR_W=Math.max(8,Math.floor((W-48)/24));
+      const H=Math.max(140,BAR_W*4);
       canvas.width=W; canvas.height=H;
       const ctx=canvas.getContext('2d');
       ctx.clearRect(0,0,W,H);
-
       const PAD={t:8,r:12,b:36,l:12};
-      const chartW=W-PAD.l-PAD.r;
-      const chartH=H-PAD.t-PAD.b;
+      const chartW=W-PAD.l-PAD.r, chartH=H-PAD.t-PAD.b;
       const maxP=Math.max(...peakPower,1);
 
-      // Hour labels (every 3 hours, 12h format)
+      // 12-hour axis labels every 3 hours
       const labels=['12 AM','3 AM','6 AM','9 AM','12 PM','3 PM','6 PM','9 PM'];
       ctx.fillStyle=isDark?'#555':'#bbb';
       ctx.font=`${Math.max(9,BAR_W-2)}px Inter,sans-serif`;
@@ -453,22 +452,17 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
         const barH=peakPower[h]>0?(peakPower[h]/maxP)*chartH:2;
         const x=PAD.l+(h/23)*chartW-(BAR_W/2);
         const y=PAD.t+chartH-barH;
-
-        // Active bar vs current hour highlight vs empty
         let color;
         if(peakPower[h]===0){
           color=isDark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.05)';
         } else if(h===currentHour){
-          color='#ffea00'; // bright yellow for current hour
-          if(isDark){ctx.shadowColor='rgba(255,234,0,0.6)';ctx.shadowBlur=8;}
+          color='#ffea00';
+          if(isDark){ctx.shadowColor='rgba(255,234,0,.7)';ctx.shadowBlur=10;}
         } else {
-          // gradient from dim orange (low) to bright orange (peak)
           const ratio=peakPower[h]/maxP;
-          const r=Math.round(255);
           const g=Math.round(100+ratio*71);
-          color=`rgba(${r},${g},0,${0.5+ratio*0.5})`;
+          color=`rgba(255,${g},0,${0.5+ratio*0.5})`;
         }
-
         ctx.fillStyle=color;
         ctx.beginPath();
         ctx.roundRect(x,y,BAR_W,barH,[3,3,0,0]);
@@ -477,50 +471,48 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
       }
     }
 
-    function updatePeaks(){
-      fetch('/peaks')
-        .then(r=>r.json())
-        .then(d=>{
-          drawPeaks(d.power||new Array(24).fill(0), d.current_hour||0);
-
-          const pkPow  =document.getElementById('pk-power');
-          const pkVolt =document.getElementById('pk-voltage');
-          const pkCurr =document.getElementById('pk-current');
-          const pkHour =document.getElementById('pk-hour');
-          if(pkPow)  pkPow.textContent  = d.best_power   || '--';
-          if(pkVolt) pkVolt.textContent = d.best_voltage  || '--';
-          if(pkCurr) pkCurr.textContent = d.best_current  || '--';
-          if(pkHour) pkHour.textContent = d.best_hour_label || '--';
-        })
+    function updateHistory(){
+      fetch('/history').then(r=>r.json())
+        .then(d=>drawTrend(d.v||[],d.c||[],d.p||[]))
         .catch(()=>{});
     }
 
-    function updateHistory(){
-      fetch('/history')
-        .then(r=>r.json())
-        .then(d=>{drawTrend(d.v||[],d.c||[],d.p||[]);})
+    function updatePeaks(){
+      fetch('/peaks').then(r=>r.json())
+        .then(d=>{
+          drawPeaks(d.power||new Array(24).fill(0),d.current_hour||0);
+          const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v||'--';};
+          set('pk-power',  d.best_power);
+          set('pk-voltage',d.best_voltage);
+          set('pk-current',d.best_current);
+          set('pk-hour',   d.best_hour_label);
+        })
         .catch(()=>{});
     }
 
     /* ── Controls ───────────────────────────────── */
     function zeroCal(){
-      ctrlMsg('Measuring zero offset…',true);
+      ctrlMsg('Sampling idle current…',true);
       fetch('/zerocal').then(r=>r.json())
-        .then(d=>{ if(d.error) ctrlMsg('✗ '+d.error,false);
-                   else        ctrlMsg('✓ Current zeroed. Offset: '+d.offset+' mA',true); })
-        .catch(()=>ctrlMsg('✗ Request failed',false));
+        .then(d=>{
+          if(d.error) ctrlMsg('✗ '+d.error,false);
+          else        ctrlMsg('✓ Zero-cal done. Offset: '+d.offset+' mA',true);
+        }).catch(()=>ctrlMsg('✗ Request failed',false));
     }
 
     function syncTime(){
+      // Date.now() returns UTC milliseconds — firmware adds the timezone offset
       const epoch=Math.floor(Date.now()/1000);
+      ctrlMsg('Syncing clock…',true);
       fetch('/settime?epoch='+epoch).then(r=>r.json())
-        .then(d=>{ if(d.error) ctrlMsg('✗ '+d.error,false);
-                   else        ctrlMsg('✓ Clock synced → '+d.time,true); })
-        .catch(()=>ctrlMsg('✗ Request failed',false));
+        .then(d=>{
+          if(d.error) ctrlMsg('✗ '+d.error,false);
+          else        ctrlMsg('✓ Clock synced → '+d.time+'  ('+d.tz+')',true);
+        }).catch(()=>ctrlMsg('✗ Request failed',false));
     }
 
     function resetEnergy(){
-      if(!confirm('Reset the energy counter to 0?')) return;
+      if(!confirm('Reset today\'s energy counter to 0?')) return;
       fetch('/resetenergy').then(r=>r.json())
         .then(()=>ctrlMsg('✓ Energy counter reset to 0',true))
         .catch(()=>ctrlMsg('✗ Request failed',false));
@@ -529,7 +521,7 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
     function resetPeaks(){
       if(!confirm('Reset today\'s peak readings?')) return;
       fetch('/resetpeaks').then(r=>r.json())
-        .then(()=>{ ctrlMsg('✓ Peak readings reset',true); updatePeaks(); })
+        .then(()=>{ctrlMsg('✓ Peak readings cleared',true);updatePeaks();})
         .catch(()=>ctrlMsg('✗ Request failed',false));
     }
 
@@ -544,9 +536,9 @@ const char WEBPAGE[] PROGMEM = R"rawliteral(
     update();
     updateHistory();
     updatePeaks();
-    setInterval(update,         1100);
-    setInterval(updateHistory,  10000);
-    setInterval(updatePeaks,    10000);
+    setInterval(update,        1100);   // matched to sensor interval
+    setInterval(updateHistory, 10000);  // trend chart refresh
+    setInterval(updatePeaks,   10000);  // peak chart refresh
   </script>
 </body>
 </html>
