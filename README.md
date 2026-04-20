@@ -3,9 +3,14 @@
 A real-time, embedded solar monitoring system built on ESP8266 with live WebSocket streaming, historical analytics, and an advanced browser-based dashboard.
 
 ---
+## ⚠️ Measurement Accuracy Disclaimer
 
+This system is designed for DIY monitoring purposes only.  
+Readings may differ slightly (±1–2%) from standard digital multimeters due to component tolerances and ADC resolution.
+
+It is not intended for precision or laboratory-grade measurements.
+---
 ## Overview
-
 This project measures and visualizes solar energy parameters including:
 
 * Voltage (V)
