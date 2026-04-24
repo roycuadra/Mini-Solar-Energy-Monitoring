@@ -2,13 +2,15 @@
 
 A real-time, embedded solar monitoring system built on ESP8266 with live WebSocket streaming, historical analytics, and an advanced browser-based dashboard.
 
+> Note: This system is currently under development. Ongoing testing, adjustments, and improvements are being made to enhance its performance and reliability over time.
 ---
-## ⚠️ Measurement Accuracy Disclaimer
+## Measurement Accuracy Disclaimer
 
 This system is designed for DIY monitoring purposes only.  
 Readings may differ slightly (±1–2%) from standard digital multimeters due to component tolerances and ADC resolution.
 
 It is not intended for precision or laboratory-grade measurements.
+
 ---
 ## Overview
 This project measures and visualizes solar energy parameters including:
@@ -89,20 +91,6 @@ INA226 Sensor → ESP8266 → WebSocket Server → Web Dashboard
 
 ---
 
-## API Endpoints
-
-| Endpoint       | Description                    |
-| -------------- | ------------------------------ |
-| `/`            | Main dashboard UI              |
-| `/history`     | Last 60 readings (trend chart) |
-| `/peaks`       | Hourly peak data (24h)         |
-| `/zerocal`     | Zero current calibration       |
-| `/settime`     | Sync RTC (epoch)               |
-| `/resetenergy` | Reset accumulated energy       |
-| `/resetpeaks`  | Reset hourly peak values       |
-
----
-
 ## Measurement Limits
 
 | Parameter | Range         |
@@ -142,25 +130,6 @@ INA226 Sensor → ESP8266 → WebSocket Server → Web Dashboard
 
 ---
 
-## Limitations
-
-* DS1302 RTC may drift over time (not temperature compensated)
-* EEPROM has limited write cycles (~100k writes)
-* INA226 current depends on shunt resistor accuracy
-* Designed for low to moderate power systems
-
----
-
-## Future Improvements
-
-* Upgrade to DS3231 RTC (higher accuracy)
-* WebSocket binary mode (faster, smaller payload)
-* OTA firmware updates
-* Cloud integration (Firebase / Supabase)
-* Anomaly detection (spikes, drops, faults)
-
----
-
 ## Dashboard Preview
 
 > Real-time web dashboard with:
@@ -174,23 +143,16 @@ INA226 Sensor → ESP8266 → WebSocket Server → Web Dashboard
 
 ## Author
 
-Built as a hands-on embedded + web integration project combining:
-
-* Electronics (sensor + power monitoring)
-* Embedded systems (ESP8266)
-* Networking (WiFi AP + WebSocket)
-* Frontend UI (HTML/CSS/JS dashboard)
+- Created with passion ❤ by **Roy Cuadra** 
+- Updated Date: 04-24-2026
 
 ---
 
 ## License
 
-This project is open-source and free to modify for personal or educational use.
+This project is licensed under the **MIT License**.  
 
 ---
 
-## Final Note
-
-This system demonstrates how a low-cost microcontroller can act as a **real-time telemetry server**, combining hardware sensing, local analytics, and a modern web interface.
-
----
+**Thank you for checking out this project!** 
+You are welcome to **fork**, **improve**, or **use** it for learning purposes.
