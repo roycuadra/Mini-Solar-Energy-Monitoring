@@ -4,12 +4,14 @@ A real-time, embedded solar monitoring system built on ESP8266 with live WebSock
 
 > Note: This system is currently under development. Ongoing testing, adjustments, and improvements are being made to enhance its performance and reliability over time.
 ---
-## Measurement Accuracy Disclaimer
+## Disclaimer
 
-This system is designed for DIY monitoring purposes only.  
+This project is a DIY Solar Energy Monitoring created for learning, Research, experimentation, and hobby use purposes only. 
+
 Readings may differ slightly (±1–2%) from standard digital multimeters due to component tolerances and ADC resolution.
-
 It is not intended for precision or laboratory-grade measurements.
+
+The author is not responsible for any damage, injury, or loss caused by using this project. Always handle electronics safely.
 
 ---
 ## Overview
