@@ -24,6 +24,10 @@ It features a **real-time dashboard** with charts, hourly peak tracking, and sys
 
 ---
 
+## Circuit Diagram
+
+![Circuit Diagram](circuit_image.png)
+
 ## Hardware Used
 
 * ESP8266 (NodeMCU)
